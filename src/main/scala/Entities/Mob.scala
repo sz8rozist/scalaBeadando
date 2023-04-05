@@ -1,6 +1,8 @@
 package Entities
 
-case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: EntityStats) extends Entity{
+import Effects.{Duration, Effect}
+
+case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: EntityStats, activeEffect: Map[Effect,Duration]) extends Entity{
   override def baseStats(): EntityStats = ???
 
   override def heal(hp: Int): Entity = ???

@@ -1,5 +1,7 @@
 package Entities
 
+import Effects.{Duration, Effect}
+
 trait Entity{
   def baseStats(): EntityStats
 
