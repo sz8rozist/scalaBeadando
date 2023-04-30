@@ -8,22 +8,23 @@ import Items.{Item, Placable}
  * @param chest azonosítója mivel nem lehet egyszerre kettő azonos id-jű chest a világban
  */
 case class Chest(capacityy: Int, id: String) extends Placable{
+  private var items: Vector[Option[ItemStack]] = Vector.fill(capacityy)(None);
   /**
    * Adja vissza hogy a láda üres-e
    * @return true ha igen, false ha nem
    */
-  def isEmpty() : Boolean = ???
+  def isEmpty() : Boolean = items.forall(_=>isEmpty());
   /**
    * Adja vissza a láda beli slotok számát
    * @return a slotok száma
    */
-  def capacity() : Int = ???
+  def capacity() : Int = items.size
   /**
    * Adja vissza a láda megadott pozícióján lévő ItemStacket egy Optionba csomagolva.
    * @param i index
    * @return az item stack ha a slot nem üres a megadott indexen, ha 0-nál kisebb vagy legalább capacity a kapott index akkor kapjunk None-t
    */
-  def apply(i: Int) : Option[ItemStack] = ???
+  def apply(i: Int) : Option[ItemStack] = if (i < 0 || i >= capacity) None else items(i)
   /**
    * A kapott stack berakása a chestbe. Pakoláskor – ha már eleve van a ládában ilyen itemből nem-full stack, akkor elsősorban azt/azokat
    * próbálja feltölteni a maximális stack méretig; ha (már ezután) nincs, akkor az első
@@ -45,11 +46,18 @@ case class Chest(capacityy: Int, id: String) extends Placable{
    * @param item amit keresünk a ládában
    * @return true ha van, false ha nincs
    */
-  def contains(item: Item) : Boolean = ???
+  def contains(item: Item) : Boolean = items.exists(_.exists(_.item == item))
   /**
    * Adja vissza hogy összesen mennyi van a ládában a megadott itemből (adja össze azoknak a stackeknek a méretét, amikben ez az item van)
    * @param item amit megakarunk számolni a ládában
    * @return összesen mennyi található a ládában az itemből
    */
-  def count(item: Item) : Int = ???
+  def count(item: Item) : Int = {
+    items.foldLeft(0) { (count, stackOpt) =>
+      stackOpt match {
+        case Some(stack) if stack.item == item => count + stack.darab
+        case _ => count
+      }
+    }
+  }
 }
