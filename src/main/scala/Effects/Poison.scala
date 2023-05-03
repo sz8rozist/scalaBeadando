@@ -9,5 +9,6 @@ case class Poison(value: Int) extends Effect{
   /**
    * Effect trait apply metódusának felülírása
    */
-  override def apply(stats: EntityStats): EntityStats = ???
+  override def apply(stats: EntityStats): EntityStats =
+    stats.copy(defense = stats.defense * value)
 }

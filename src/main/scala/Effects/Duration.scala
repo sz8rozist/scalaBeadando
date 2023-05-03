@@ -1,6 +1,8 @@
 package Effects
 
 /**
- * Egy speciális effect
+ * Duration interface
  */
-case class Duration()
+trait Duration{
+  def tick: Option[Duration]
+}

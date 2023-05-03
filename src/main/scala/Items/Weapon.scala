@@ -6,4 +6,4 @@ package Items
  * @param maxStackSize stack méret
  * @param damage sebzés
  */
-case class Weapon(nev: String, maxStackSize: Int = 1, damage: Int) extends Item
+case class Weapon(nev: String, damage: Int, maxStackSize: Int = 1) extends Item

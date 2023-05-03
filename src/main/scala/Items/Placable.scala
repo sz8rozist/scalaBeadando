@@ -3,6 +3,7 @@ package Items
  * Placabel interface ami egy speciális item
  */
 trait Placable extends Item {
+  val canBeMined: Boolean = true
   /**
    * Item nevét visszaadó metódus
    *

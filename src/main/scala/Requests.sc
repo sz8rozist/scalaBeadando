@@ -70,34 +70,78 @@ case class HitEntity(attackerID: String, defenderID: String) extends Request
  * @param player  a világban jelenlévő játékosok
  * @param mob a világban jelenlévő mobok.
  */
-case class WorldState(request: Vector[Request], player : Vector[Player], mob: Vector[Mob]){
+case class WorldState(request: Vector[Request], player : Vector[Player], mob: Vector[Mob], map: Array[Array[Placable]]){
   /**
    * Visszaadja hogy van e még feldolgozatlan request
    *
    * @return igaz ha van hamis ha nincs
    */
-  def hasRequests() : Boolean = ???
+  def hasRequests() : Boolean = request.nonEmpty
 
   /**
    * A soronkövetkező requestet dolgozza fel.
    *
    * @return Ha nincs több feldolgozatlan request, vagy nincs benn player a játékba, akkor return az eredeti worldstate, különben a soron következő requestet vegyük ki a vectorból és aktualizáljuk vele a statet.
    */
-  def processNextRequest() : WorldState = ???
+  def processNextRequest() : WorldState = {
+    if(!hasRequests() || player.isEmpty) this
+    else request.head match {
+      case Join(p) => {
+        val newPlayerVector = player :+ p
+        WorldState(request, newPlayerVector, mob, map)
+      }
+      case LeavePlayer(id) => WorldState(request, player.filter(_.id == id), mob, map)
+      case Die(id) => WorldState(request, player, mob.filter(_.id == id), map)
+      case StoreItem(playerID, chestID) => {
+        val playerOpt = player.find(_.id == playerID)
+        val chestOpt = player.find(_.inventory.id == chestID)
+        if(playerOpt.isDefined && chestOpt.isDefined){
+          val player = playerOpt.get
+          val chest = chestOpt.get
+          //Távolság számítása még hiányzik innen
+          val emptyCursor = playerOpt.get.onCursor.isEmpty
+          if(!emptyCursor){
+            val item = player.peekCursor().get
+            val result = chest.inventory.+(item)
+            player.onCursor.take(result._2.get.darab)
+          }
+        }
+        this
+      }
+      case LootItem(playerID, chestID, index) => {
+        val playerOpt = player.find(_.id == playerID)
+        val chestOpt = player.find(_.inventory.id == chestID)
+        if(playerOpt.isDefined && chestOpt.isDefined){
+          val emptyCursor = playerOpt.get.onCursor.isEmpty
+          if(emptyCursor){
+            val itemOpt = chestOpt.get.inventory.apply(index)
+           playerOpt.get.onCursor = Some(itemOpt.get)
+          }
+        }
+        this
+      }
+    }
+  }
 
   /**
    * Az összes requestet dolgozza fel.
    *
    * @return Ha elfogytak a requestek adja vissza a statet.
    */
-  def processAllRequest() : WorldState = ???
+  def processAllRequest() : WorldState = {
+    var nextState = this
+    while(nextState.hasRequests()){
+      nextState = nextState.processNextRequest()
+    }
+    nextState
+  }
 
   /**
    * A világban aktuálisan belépett játékosok
    *
    * @return a világban aktuálisan belépett játékosok
    */
-  def players() : Vector[Player] = ???
+  def players() : Vector[Player] = player
 
   /**
    * Visszaadja a térkép adott koordinátáján lévő blokkot egy Optione[Placable] - ben
@@ -105,7 +149,13 @@ case class WorldState(request: Vector[Request], player : Vector[Player], mob: Ve
    * @param y A térkép y koordinátája
    * @return ha nincs ezen a pozíción blokk akkor None egyébként az ott lévő Placebel egy Someban
    */
-  def apply(x: Int, y: Int) : Option[Placable] = ???
+  def apply(x: Int, y: Int) : Option[Placable] = {
+    if(x >= 0 && x< width() && y >= 0 && y < height()){
+      Some(map(y)(x))
+    }else{
+      None
+    }
+  }
 
   /**
    * Visszaadja az adott pozíción lévő blokkot egy Optione[Placable] - ben
@@ -113,22 +163,12 @@ case class WorldState(request: Vector[Request], player : Vector[Player], mob: Ve
    * @param position térkép pozíció
    * @return ha nincs ezen a pozíción blokk akkor NONE egyébként az ott lévő Placebel egy Someban
    */
-  def apply(position: Position) : Option[Placable] = ???
+  def apply(position: Position) : Option[Placable] = {
+    if (position.x < 0 || position.y < 0 || position.x >= width || position.y >= height) None
+    else map.lift(position.y.toInt).flatMap(_.lift(position.x.toInt))
+  }
 
-  def width() : Int = ???
+  def width() : Int = map(0).length
 
-  def height() : Int = ???
-
-  /* def handle(request: Request): WorldState = request match {
-    case Tick => ???
-    case Join(player) => ???
-    case LeavePlayer(player) => ???
-    case Die(id) => ???
-    case Mine(id,position) => ???
-    case StoreItem(playerID, chestID) => ???
-    case LootItem(playerID, chestID, index) => ???
-    case Consume(playerID) => ???
-    case MoveEntity(entityID, position) => ???
-    case HitEntity(attackerID, defenderID) => ???
-  }*/
+  def height() : Int = map.length
 }

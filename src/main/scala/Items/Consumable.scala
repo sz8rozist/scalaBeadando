@@ -1,8 +1,12 @@
 package Items
 
+import Effects.{Duration, Effect}
+
 /**
- * Consumable egy speciális item
- * @param nev item neve
- * @param maxStackSize stack méret
+ * Consumable egy interface
+ *
+ * @param effects az itemen lévő effekt, duration tuple
  */
-case class Consumable(nev: String, maxStackSize: Int) extends Item
+trait Consumable extends Item{
+  val effects: Vector[(Effect, Duration)]
+}

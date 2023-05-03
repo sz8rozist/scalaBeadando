@@ -1,6 +1,8 @@
 package Entities
 
-import Effects.Effect
+import Effects.{Effect, IncreaseDamage}
+
+import scala.language.postfixOps
 
 
 /**
@@ -18,7 +20,7 @@ case class EntityStats(attack: Int, defense: Int, speed: Double, maxHP: Int, reg
    * @param effect ez az effect alapján módosítjuk az entity statjait
    * @return Az entitás statjai a módosítás után
    */
-  def applyEffect(effect: Effect) : EntityStats = ???
+  def applyEffect(effect: Effect) : EntityStats = effect.apply(this)
 
   /**
    * Visszaadja a kapott effectek mindegyike alapján módosított statokat
@@ -26,5 +28,7 @@ case class EntityStats(attack: Int, defense: Int, speed: Double, maxHP: Int, reg
    * @param effect a kapott effectek ez lehet egy vagy több
    * @return Az entitás statjai a módosítás után
    */
-  def applyEffect(effect: Effect*) : EntityStats = ???
+  def applyEffect(effect: Effect*) : EntityStats = effect.foldLeft(this) { (stats, effect) =>
+    effect.apply(stats)
+  }
 }

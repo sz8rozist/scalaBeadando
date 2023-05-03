@@ -1,7 +1,12 @@
 package Items
+
+import Effects.{Duration, Effect}
+
 /**
- * Equipment egy speciális item
- * @param nev item neve
- * @param maxStackSize stack méret
+ * Equipment interface
+ *
+ * @param effects az itemen lévő effekt, duration tuple
  */
-case class Equipment(nev: String, maxStackSize: Int) extends Item
+trait Equipment extends Item{
+  val effects: Vector[(Effect, Duration)]
+}

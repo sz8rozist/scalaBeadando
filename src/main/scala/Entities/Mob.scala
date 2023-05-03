@@ -15,7 +15,7 @@ case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: Entity
   /**
    * Entitás alapstatjainak visszaadása
    */
-  override def baseStats(): EntityStats = ???
+  override def baseStats(): EntityStats = this.baseStat
 
   /**
    * Az entitás életerejének növelésére szolgála metódus
@@ -23,14 +23,24 @@ case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: Entity
    * @param hp ennyivel legyen több az életereje (legyen növelve), de legfeljebb a max HP-igy gyógyulhasson
    * @return A felhealelt entitás vagy az eredeti ha a hp negatív
    */
-  override def heal(hp: Int): Entity = ???
+  override def heal(hp: Int): Entity = {
+    if (hp < 0) this else {
+      val maxHp = baseStat.maxHP
+      val newHp = (this.hp + hp).min(maxHp)
+      this.copy(hp = newHp)
+    }
+  }
 
   /**
    * Támadás metódus. A visszaadott entitásnak ennyivel (hp-val) csökkenjen az életereje.
    * @param hp ennyivel csökkenjen az életerő
    * @return ha pozitív marad az életereje az entitásnak akkor optinben adjuk vissza az entitást ha nullára vagy alá csökken akkor None
    */
-  override def takeDamage(hp: Int): Option[Entity] = ???
+  override def takeDamage(hp: Int): Option[Entity] = {
+    val newHp = this.hp - hp
+    if (newHp <= 0) None
+    else Some(this.copy(hp = newHp))
+  }
 
   /**
    * Az entitás effect listájának bővítése. Ha az effect nincs még rajta akkor plusszba kerüljön hozzá. Ha rajta van akkor a meglévő és az új duration közül a nagyobb maradjon meg.
@@ -38,21 +48,30 @@ case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: Entity
    * @param duration az effect időtartama
    * @return Entitás a frissített effect listával
    */
-  override def addEffect(effect: Effect, duration: Duration): Entity = ???
+  override def addEffect(effect: Effect, duration: Duration): Entity = {
+    val oldDuration = activeEffect.getOrElse(effect, Duration.ZERO)
+    val newDuration = duration.max(oldDuration)
+    this.copy(activeEffect = activeEffect.updated(effect, newDuration))
+  }
 
   /**
    * Effect levétel az entitásról. Leveszi azt az effectet az entitásról amelyre igaz a paraméterbe kapott predikátum
    * @param p predikátum
    * @return Entitás a frissített effect listával
    */
-  override def removeEffects(p: Effect => Boolean): Entity = ???
+  override def removeEffects(p: Effect => Boolean): Entity = {
+    val filteredEffects = activeEffect.filterKeys(!p(_)).toMap
+    this.copy(activeEffect = filteredEffects)
+  }
 
   /**
    * Entitás mozgatása egy másik pozícióra
    * @param position pozíció amelyre mozgatni kivánjuk az entitást
    * @return Entitás amely mozgatva lett az új pozícióra
    */
-  override def moveTo(position: Position): Entity = ???
+  override def moveTo(position: Position): Entity = {
+    this.copy(pos = position)
+  }
 
   /**
    * Adja vissza, hogy egy tickkel később mivé válik ez az entitás. Adott
