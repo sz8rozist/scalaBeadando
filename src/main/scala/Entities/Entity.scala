@@ -32,7 +32,7 @@ trait Entity{
    * @param duration az effect időtartama
    * @return Entitás a frissített effect listával
    */
-  def addEffect(effect: Effect, duration: Duration): Entity
+  def addEffect(effects: Vector[(Effect, Duration)]): Entity
 
   /**
    * Effect levétel az entitásról. Leveszi azt az effectet az entitásról amelyre igaz a paraméterbe kapott predikátum

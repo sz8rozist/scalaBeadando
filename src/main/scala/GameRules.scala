@@ -1,16 +1,10 @@
 import Effects.{IncreaseDamage, Poison, ScaleDefenes}
-import Items.{Armor, Consumable, Equipment, Item, Placable, Potion, Weapon}
+import Items.{Armor, Consumable, CraftingRecipe, Equipment, Item, Placable, Potion, Weapon}
 
 /**
  * GameRules case class ami tartalmazza a világban lévő összes item típust.
  */
-case class GameRules(){
-
-  private val items: Vector[Item] = Vector(
-    Armor(nev = "Armor",1,5),
-    Potion(name = "Potion", Vector[(IncreaseDamage,2),(ScaleDefenes,10)]),
-    Weapon(nev = "Weapon",20)
-  )
+case class GameRules(val items: Vector[Item], val craftingRecipes: List[CraftingRecipe]){
 
   /**
    * Visszaadja az összes Item egy vektorát amire igaz a predikátum
@@ -48,4 +42,13 @@ case class GameRules(){
    */
   def getConsumables(p: Item => Boolean): Vector[Consumable] = items.collect{case c: Consumable => c}
 
+  /**
+   * @return Az összes olyan itemet ami szerepel receptben nyersanyagként
+   */
+  def getMaterials: List[Item] = craftingRecipes.flatMap(_.inputs.map(_.item))
+
+  /**
+   * @return Azz összes olyan itemet ami szerepel receptben outputként
+   */
+  def getCraftables: List[Item] = craftingRecipes.map(_.output.item)
 }

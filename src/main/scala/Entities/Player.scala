@@ -53,9 +53,7 @@ case class Player(nev: String, id: String, hp: Int, pos: Position, baseStat: Ent
    * @param duration az effect időtartama
    * @return Entitás a frissített effect listával
    */
-  override def addEffect(effect: Effect, duration: Duration): Entity = {
-???
-  }
+  override def addEffect(effects: Vector[(Effect, Duration)]): Entity = ???
 
   /**
    * Effect levétel az entitásról. Leveszi azt az effectet az entitásról amelyre igaz a paraméterbe kapott predikátum
@@ -102,4 +100,6 @@ case class Player(nev: String, id: String, hp: Int, pos: Position, baseStat: Ent
       case None => None
     }
   }
+
+  def isAlive(): Boolean = hp == 0
 }

@@ -64,7 +64,7 @@ case class Chest(capacity: Int, id: String) extends Placable {
       (this, Some(stack))
     } else {
       val items = this.items.updated(index, Some(stack))
-      (Chest(capacity, id), items.head)
+      (Chest(capacity, id), items(index))
     }
   }
   /**

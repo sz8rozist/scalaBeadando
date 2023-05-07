@@ -48,11 +48,7 @@ case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: Entity
    * @param duration az effect időtartama
    * @return Entitás a frissített effect listával
    */
-  override def addEffect(effect: Effect, duration: Duration): Entity = {
-    val oldDuration = activeEffect.getOrElse(effect, Duration.ZERO)
-    val newDuration = duration.max(oldDuration)
-    this.copy(activeEffect = activeEffect.updated(effect, newDuration))
-  }
+  override def addEffect(effects: Vector[(Effect, Duration)]): Entity = ???
 
   /**
    * Effect levétel az entitásról. Leveszi azt az effectet az entitásról amelyre igaz a paraméterbe kapott predikátum
@@ -84,5 +80,14 @@ case class Mob(nev: String, id: String, hp: Int, pos: Position, baseStat: Entity
    * akkor a HP már a kövi tickben az új maxHP fölé nem mehet, és ezt a felső korlátot
    * alkalmazzuk.)
    */
-  override def tick(): Option[Entity] = ???
+  override def tick(): Option[Entity] = {
+    val (active, _) = activeEffect.mapValues(_.tick).partition(_._2.isDefined)
+    val newActiveEffect = active.collect { case (k, Some(v)) => k -> v }
+    val newHp = (hp + baseStat.regeneration).min(baseStat.maxHP)
+    val newEntity = this.copy(activeEffect = newActiveEffect.toMap, hp = newHp.toInt)
+    if (newHp <= 0) None
+    else Some(newEntity)
+  }
+
+  def isAlive(): Boolean = hp == 0
 }

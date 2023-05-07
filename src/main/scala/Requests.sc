@@ -1,5 +1,5 @@
 import Entities.{Mob, Player, Position}
-import Items.Placable
+import Items.{Consumable, Placable}
 
 /**
  * Request sealed trait tehát csak ebben a fájlban extendelhető, mint egy interface
@@ -70,7 +70,7 @@ case class HitEntity(attackerID: String, defenderID: String) extends Request
  * @param player  a világban jelenlévő játékosok
  * @param mob a világban jelenlévő mobok.
  */
-case class WorldState(request: Vector[Request], player : Vector[Player], mob: Vector[Mob], map: Array[Array[Placable]]){
+case class WorldState(request: Vector[Request], var player : Vector[Player], var mob: Vector[Mob], map: Array[Array[Placable]]){
   /**
    * Visszaadja hogy van e még feldolgozatlan request
    *
@@ -120,7 +120,62 @@ case class WorldState(request: Vector[Request], player : Vector[Player], mob: Ve
         }
         this
       }
+      case Tick => {
+        player.map(_.tick())
+        mob.map(_.tick())
+        val (newRequests, finalPlayers, finalMobs) = removeDeadEntities(request.tail, player, mob)
+        val deadPlayers = player.filter(!_.isAlive())
+        deadPlayers.foreach{p => request :+= Die(p.id)}
+        val deadMobs = mob.filter(!_.isAlive())
+        deadMobs.foreach{m => request :+= Die(m.id)}
+        WorldState(newRequests, finalPlayers, finalMobs, map)
+      }
+      case Consume(playerID) => {
+        val playerOpt = Option(player(player.indexWhere(_.id == playerID)))
+        playerOpt.flatMap(_.onCursor.collect { case consumable: Consumable => consumable }) match {
+          case Some(consumable) =>
+            val updatedPlayer = playerOpt.get.copy(onCursor = None, activeEffect = playerOpt.get.activeEffect ++ consumable.effects)
+            WorldState(request, player.updated(player.indexOf(playerOpt.get), updatedPlayer), mob, map)
+          case None => this
+        }
+      }
+      case HitEntity(attackerID, defenderID) => {
+        val attackerOpt = Option(player.filter(_.id == attackerID))
+        val defenderOpt = Option(mob.filter(_.id == defenderID))
+
+        (attackerOpt, defenderOpt) match {
+          case (Some(attacker: Player), Some(defender: Mob)) =>
+              val damage = Math.max(1, attacker.baseStat.attack - defender.baseStat.defense)
+              val updatedDefender = defender.copy(hp = Math.max(0, defender.hp - damage))
+
+              if (updatedDefender.hp == 0) {
+                val dieRequest = Die(updatedDefender.id)
+                WorldState(request :+ dieRequest, players(), mob.filterNot(_.id == defenderID), map)
+              } else {
+                WorldState(request, players(), mob.updated(mob.indexOf(updatedDefender), updatedDefender.asInstanceOf[Mob]), map)
+              }
+          case _ => this
+        }
+      }
     }
+  }
+  /**
+   * @param requests a világban fellelhető requestek.
+   * @param players a világban lévő játékosok
+   * @param mobs a világban lévő mobok
+   * @return Egy tupel a törlések utáni állapotokkal.
+   */
+  def removeDeadEntities(requests: Vector[Request], players: Vector[Player], mobs: Vector[Mob]): (Vector[Request], Vector[Player], Vector[Mob]) = {
+    val deadPlayerIds = players.filter(!_.isAlive).map(_.id).toSet
+    val deadMobIds = mobs.filter(!_.isAlive).map(_.id).toSet
+
+    val finalPlayers = players.filter(_.isAlive())
+    val finalMobs = mobs.filter(_.isAlive())
+
+    val deadPlayerRequests = requests ++ deadPlayerIds.map(Die)
+    val deadMobRequests = deadPlayerRequests ++ deadMobIds.map(Die)
+
+    (deadMobRequests, finalPlayers, finalMobs)
   }
 
   /**
