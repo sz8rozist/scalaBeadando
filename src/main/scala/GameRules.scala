@@ -16,31 +16,31 @@ case class GameRules(val items: Vector[Item], val craftingRecipes: List[Crafting
    * Visszaadja az Placable Itemek egy vektorát amire igaz a predikátum
    * @param p predikátum
    */
-  def getPlacables(p: Item => Boolean): Vector[Placable] = items.collect{case placable: Placable => placable}
+  def getPlacables(p: Item => Boolean): Vector[Placable] = items.collect {case placable: Placable if p(placable) => placable}
 
   /**
    * Visszaadja az Weapons Itemek egy vektorát amire igaz a predikátum
    * @param p predikátum
    */
-  def getWeapons(p: Item => Boolean): Vector[Weapon] = items.collect {case weapon: Weapon => weapon}
+  def getWeapons(p: Item => Boolean): Vector[Weapon] = items.collect {case weapon: Weapon if p(weapon) => weapon}
 
   /**
    * Visszaadja az ArmorsItemek egy vektorát amire igaz a predikátum
    * @param p predikátum
    */
-  def getArmors(p: Item => Boolean): Vector[Armor] = items.collect {case armor: Armor => armor}
+  def getArmors(p: Item => Boolean): Vector[Armor] = items.collect {case armor: Armor if p(armor) => armor}
 
   /**
    * Visszaadja az Equipments Itemek egy vektorát amire igaz a predikátum
    * @param p predikátum
    */
-  def getEquipments(p: Item => Boolean): Vector[Equipment] = items.collect{case eq: Equipment => eq}
+  def getEquipments(p: Item => Boolean): Vector[Equipment] = items.collect{case eq: Equipment if p(eq) => eq}
 
   /**
    * Visszaadja az Consumables Itemek egy vektorát amire igaz a predikátum
    * @param p predikátum
    */
-  def getConsumables(p: Item => Boolean): Vector[Consumable] = items.collect{case c: Consumable => c}
+  def getConsumables(p: Item => Boolean): Vector[Consumable] = items.collect{case c: Consumable if p(c) => c}
 
   /**
    * @return Az összes olyan itemet ami szerepel receptben nyersanyagként
